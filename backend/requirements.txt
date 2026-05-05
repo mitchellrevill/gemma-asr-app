@@ -1,0 +1,33 @@
+# Gemma ASR Police Report App — Backend Dependencies
+#
+# First-time install:
+#   pip install -r requirements.txt
+#
+# Switching from CPU torch to CUDA torch (or vice-versa), or fixing
+# a torch/torchvision mismatch:
+#   pip uninstall -y torch torchvision
+#   pip install -r requirements.txt
+#
+# To change CUDA version, edit the --extra-index-url below
+# (cu121 / cu124 / cu126 / cu128 — must match your NVIDIA driver).
+
+--extra-index-url https://download.pytorch.org/whl/cu128
+
+# ── Web framework ────────────────────────────────────────────────────────────
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9         # Required for UploadFile
+
+# ── Gemma 4 E2B-it (audio) ──────────────────────────────────────────────────
+transformers>=4.51.0            # Gemma 4 requires transformers >= 4.51
+torch==2.11.0+cu128             # CUDA 12.8 build — the +cu128 tag forces pip
+                                # to pull from the PyTorch index above
+accelerate>=0.29.0
+bitsandbytes>=0.43.0            # 4-bit NF4 quant for low-VRAM GPUs (auto-engaged
+                                # when CUDA device has < 8 GB VRAM)
+sentencepiece>=0.1.99           # tokenizer
+
+# ── Audio processing ─────────────────────────────────────────────────────────
+librosa>=0.10.1
+soundfile>=0.12.1
+numpy>=1.26.0

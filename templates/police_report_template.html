@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Police Situation Report</title>
+  <style>
+    :root {
+      --blue-dark: #1a2744;
+      --blue-mid: #2b4080;
+      --blue-light: #e8edf7;
+      --gold: #c8a84b;
+      --red: #b22222;
+      --text: #1c1c1c;
+      --border: #b0b8cc;
+      --bg: #f4f6fb;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+    }
+    .report-wrapper {
+      max-width: 900px;
+      margin: 24px auto;
+      background: #fff;
+      border: 2px solid var(--blue-dark);
+      box-shadow: 0 4px 18px rgba(26,39,68,0.13);
+    }
+
+    /* ── Header ── */
+    .report-header {
+      background: var(--blue-dark);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+      border-bottom: 4px solid var(--gold);
+    }
+    .report-header .crest {
+      width: 36px;
+      height: 36px;
+      color: var(--gold);
+      flex-shrink: 0;
+    }
+    .report-header .title-block { text-align: center; flex: 1; }
+    .report-header h1 { font-size: 20px; letter-spacing: 3px; text-transform: uppercase; }
+    .report-header h2 { font-size: 13px; letter-spacing: 1.5px; color: var(--gold); margin-top: 4px; }
+    .report-header .ref-block { text-align: right; font-size: 11px; line-height: 1.7; }
+    .report-header .ref-block span { display: block; }
+    .report-header .ref-block strong { color: var(--gold); }
+
+    /* ── Classification Banner ── */
+    .classification-banner {
+      background: var(--red);
+      color: #fff;
+      text-align: center;
+      font-weight: 700;
+      letter-spacing: 4px;
+      font-size: 11px;
+      padding: 5px;
+    }
+
+    /* ── Sections ── */
+    .section {
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+    }
+    .section-title {
+      background: var(--blue-mid);
+      color: #fff;
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 5px 10px;
+      margin: -14px -24px 12px -24px;
+    }
+
+    /* ── Grid fields ── */
+    .field-grid {
+      display: grid;
+      gap: 8px 16px;
+    }
+    .field-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+    .field-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .field-grid.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+    .field { display: flex; flex-direction: column; gap: 2px; }
+    .field label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--blue-mid);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+    .field-value {
+      border-bottom: 1px solid var(--border);
+      min-height: 22px;
+      padding: 2px 4px;
+      font-size: 13px;
+      background: transparent;
+      line-height: 1.4;
+    }
+    .field-value.multiline {
+      min-height: 60px;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 6px;
+      white-space: pre-wrap;
+    }
+
+    /* ── Status Badge ── */
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .badge-high    { background: #ffeaea; color: var(--red); border: 1px solid var(--red); }
+    .badge-medium  { background: #fff3e0; color: #b35a00; border: 1px solid #e08000; }
+    .badge-low     { background: #e8f5e9; color: #2e7d32; border: 1px solid #43a047; }
+    .badge-open    { background: #e3f2fd; color: #1565c0; border: 1px solid #1976d2; }
+    .badge-closed  { background: #eeeeee; color: #555;    border: 1px solid #aaa; }
+
+    /* ── Parties Table ── */
+    .parties-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+    .parties-table th {
+      background: var(--blue-light);
+      color: var(--blue-dark);
+      font-size: 10px;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      padding: 5px 8px;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .parties-table td {
+      padding: 5px 8px;
+      border: 1px solid var(--border);
+      vertical-align: top;
+    }
+    .parties-table tr:nth-child(even) td { background: var(--blue-light); }
+    .role-suspect { color: var(--red); font-weight: 700; }
+    .role-victim  { color: #7b3f00; font-weight: 700; }
+    .role-witness { color: #2e5da1; font-weight: 700; }
+
+    /* ── Key Points List ── */
+    .key-points-list {
+      list-style: none;
+      margin-top: 4px;
+    }
+    .key-points-list li {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      padding: 4px 0;
+      border-bottom: 1px dashed var(--border);
+      font-size: 12px;
+    }
+    .key-points-list li::before {
+      content: '▸';
+      color: var(--gold);
+      font-size: 12px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* ── Actions / Follow-up ── */
+    .actions-list { list-style: none; margin-top: 4px; }
+    .actions-list li {
+      padding: 3px 0;
+      border-bottom: 1px dashed var(--border);
+      font-size: 12px;
+      display: flex;
+      gap: 8px;
+    }
+    .actions-list li::before {
+      content: '✓';
+      color: #2e7d32;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .followup-box {
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 8px;
+      margin-top: 6px;
+      font-size: 12px;
+      min-height: 40px;
+      white-space: pre-wrap;
+    }
+
+    /* ── AI Info ── */
+    .ai-meta {
+      background: var(--blue-light);
+      border-top: 2px solid var(--gold);
+      font-size: 10px;
+      color: #555;
+      padding: 8px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .ai-meta span { display: flex; gap: 4px; align-items: center; }
+
+    /* ── Signature Strip ── */
+    .sig-strip {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+    }
+    .sig-block { display: flex; flex-direction: column; gap: 6px; }
+    .sig-line { border-bottom: 1px solid #333; height: 28px; }
+    .sig-label { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    @media print {
+      body { background: #fff; }
+      .report-wrapper { margin: 0; box-shadow: none; border: 1px solid #333; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="report-wrapper" id="policeReport">
+
+  <!-- Header -->
+  <div class="report-header">
+    <svg class="crest" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5z"/>
+    </svg>
+    <div class="title-block">
+      <h1>Police Situation Report</h1>
+      <h2>OFFICIAL USE ONLY</h2>
+    </div>
+    <div class="ref-block">
+      <span><strong>Incident No.</strong> <span id="incidentNumber">—</span></span>
+      <span><strong>Report Date</strong> <span id="reportDate">—</span></span>
+      <span><strong>Status</strong> <span id="statusBadge">—</span></span>
+    </div>
+  </div>
+
+  <!-- Classification -->
+  <div class="classification-banner" id="classificationBanner">UNCLASSIFIED</div>
+
+  <!-- Section 1: Incident Details -->
+  <div class="section">
+    <div class="section-title">1 — Incident Details</div>
+    <div class="field-grid cols-4">
+      <div class="field">
+        <label>Incident Type</label>
+        <div class="field-value" id="incidentType">—</div>
+      </div>
+      <div class="field">
+        <label>Date of Incident</label>
+        <div class="field-value" id="incidentDate">—</div>
+      </div>
+      <div class="field">
+        <label>Time of Incident</label>
+        <div class="field-value" id="incidentTime">—</div>
+      </div>
+      <div class="field">
+        <label>Priority</label>
+        <div class="field-value" id="priority">—</div>
+      </div>
+    </div>
+    <div class="field-grid cols-2" style="margin-top:10px;">
+      <div class="field">
+        <label>Location / Address</label>
+        <div class="field-value" id="location">—</div>
+      </div>
+      <div class="field">
+        <label>Grid Reference / Coordinates</label>
+        <div class="field-value" id="gridRef">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 2: Reporting Officer -->
+  <div class="section">
+    <div class="section-title">2 — Reporting Officer</div>
+    <div class="field-grid cols-4">
+      <div class="field">
+        <label>Officer Name</label>
+        <div class="field-value" id="officerName">—</div>
+      </div>
+      <div class="field">
+        <label>Badge / Collar No.</label>
+        <div class="field-value" id="badgeNumber">—</div>
+      </div>
+      <div class="field">
+        <label>Rank</label>
+        <div class="field-value" id="rank">—</div>
+      </div>
+      <div class="field">
+        <label>Unit / Station</label>
+        <div class="field-value" id="unit">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 3: Parties Involved -->
+  <div class="section">
+    <div class="section-title">3 — Parties Involved</div>
+    <table class="parties-table" id="partiesTable">
+      <thead>
+        <tr>
+          <th>Role</th>
+          <th>Name</th>
+          <th>DOB / Age</th>
+          <th>Address</th>
+          <th>Description</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody id="partiesBody">
+        <tr><td colspan="6" style="text-align:center;color:#aaa;padding:10px;">No parties recorded</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Section 4: Vehicle Information -->
+  <div class="section">
+    <div class="section-title">4 — Vehicle Information</div>
+    <table class="parties-table" id="vehicleTable">
+      <thead>
+        <tr>
+          <th>Registration</th>
+          <th>Make / Model</th>
+          <th>Colour</th>
+          <th>Owner</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody id="vehicleBody">
+        <tr><td colspan="5" style="text-align:center;color:#aaa;padding:10px;">No vehicles recorded</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Section 5: Narrative -->
+  <div class="section">
+    <div class="section-title">5 — Narrative / Full Transcription</div>
+    <div class="field-value multiline" id="narrative">No narrative recorded.</div>
+  </div>
+
+  <!-- Section 6: Key Points -->
+  <div class="section">
+    <div class="section-title">6 — Key Points</div>
+    <ul class="key-points-list" id="keyPointsList">
+      <li>No key points extracted.</li>
+    </ul>
+  </div>
+
+  <!-- Section 7: Actions Taken -->
+  <div class="section">
+    <div class="section-title">7 — Actions Taken</div>
+    <ul class="actions-list" id="actionsList">
+      <li>No actions recorded.</li>
+    </ul>
+  </div>
+
+  <!-- Section 8: Follow-up -->
+  <div class="section">
+    <div class="section-title">8 — Follow-up Required</div>
+    <div class="field-grid cols-2">
+      <div class="field">
+        <label>Follow-up Required?</label>
+        <div class="field-value" id="followUpRequired">—</div>
+      </div>
+      <div class="field">
+        <label>Assigned To</label>
+        <div class="field-value" id="followUpAssignee">—</div>
+      </div>
+    </div>
+    <div class="followup-box" id="followUpNotes">—</div>
+  </div>
+
+  <!-- Report meta -->
+  <div class="ai-meta">
+    <span id="audioMeta">Audio duration: —</span>
+    <span id="generatedAt">Generated: —</span>
+  </div>
+
+  <!-- Signature Strip -->
+  <div class="sig-strip">
+    <div class="sig-block">
+      <div class="sig-line"></div>
+      <div class="sig-label">Reporting Officer Signature</div>
+    </div>
+    <div class="sig-block">
+      <div class="sig-line"></div>
+      <div class="sig-label">Supervising Officer Signature</div>
+    </div>
+    <div class="sig-block">
+      <div class="sig-line"></div>
+      <div class="sig-label">Date / Time Signed</div>
+    </div>
+  </div>
+
+</div><!-- /report-wrapper -->
+
+<script>
+/**
+ * fillReport(data) — call this with the JSON from the ASR pipeline.
+ *
+ * Expected JSON schema:
+ * {
+ *   "incident_number": "string",
+ *   "report_date": "string",
+ *   "status": "open|closed|pending",
+ *   "classification": "UNCLASSIFIED|RESTRICTED|CONFIDENTIAL",
+ *   "incident_type": "string",
+ *   "incident_date": "string",
+ *   "incident_time": "string",
+ *   "priority": "HIGH|MEDIUM|LOW",
+ *   "location": "string",
+ *   "grid_ref": "string",
+ *   "officer_name": "string",
+ *   "badge_number": "string",
+ *   "rank": "string",
+ *   "unit": "string",
+ *   "parties": [
+ *     { "role": "suspect|victim|witness", "name": "string", "dob": "string",
+ *       "address": "string", "description": "string", "notes": "string" }
+ *   ],
+ *   "vehicles": [
+ *     { "registration": "string", "make_model": "string", "colour": "string",
+ *       "owner": "string", "notes": "string" }
+ *   ],
+ *   "narrative": "string",
+ *   "key_points": ["string"],
+ *   "actions_taken": ["string"],
+ *   "follow_up_required": true|false,
+ *   "follow_up_assignee": "string",
+ *   "follow_up_notes": "string",
+ *   "audio_duration_s": number,
+ *   "chunks_processed": number,
+ *   "confidence": "string"
+ * }
+ */
+function fillReport(data) {
+  const set = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val || '—';
+  };
+
+  set('incidentNumber',  data.incident_number);
+  set('reportDate',      data.report_date);
+  set('incidentType',    data.incident_type);
+  set('incidentDate',    data.incident_date);
+  set('incidentTime',    data.incident_time);
+  set('location',        data.location);
+  set('gridRef',         data.grid_ref);
+  set('officerName',     data.officer_name);
+  set('badgeNumber',     data.badge_number);
+  set('rank',            data.rank);
+  set('unit',            data.unit);
+  set('narrative',       data.narrative);
+  set('followUpAssignee', data.follow_up_assignee);
+  set('followUpNotes',   data.follow_up_notes);
+
+  // Classification banner
+  const cb = document.getElementById('classificationBanner');
+  if (cb && data.classification) cb.textContent = data.classification;
+
+  // Priority badge
+  const priorityEl = document.getElementById('priority');
+  if (priorityEl && data.priority) {
+    const cls = { HIGH: 'badge-high', MEDIUM: 'badge-medium', LOW: 'badge-low' }[data.priority.toUpperCase()] || '';
+    priorityEl.innerHTML = `<span class="badge ${cls}">${data.priority}</span>`;
+  }
+
+  // Status badge
+  const statusEl = document.getElementById('statusBadge');
+  if (statusEl && data.status) {
+    const cls = { open: 'badge-open', closed: 'badge-closed' }[data.status.toLowerCase()] || 'badge-open';
+    statusEl.innerHTML = `<span class="badge ${cls}">${data.status.toUpperCase()}</span>`;
+  }
+
+  // Follow-up
+  const fuEl = document.getElementById('followUpRequired');
+  if (fuEl) fuEl.textContent = data.follow_up_required ? 'YES' : 'NO';
+
+  // Parties
+  const partiesBody = document.getElementById('partiesBody');
+  if (partiesBody && data.parties && data.parties.length) {
+    partiesBody.innerHTML = data.parties.map(p => {
+      const roleClass = { suspect: 'role-suspect', victim: 'role-victim', witness: 'role-witness' }[p.role?.toLowerCase()] || '';
+      return `<tr>
+        <td><span class="${roleClass}">${p.role || '—'}</span></td>
+        <td>${p.name || '—'}</td>
+        <td>${p.dob || '—'}</td>
+        <td>${p.address || '—'}</td>
+        <td>${p.description || '—'}</td>
+        <td>${p.notes || '—'}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Vehicles
+  const vehicleBody = document.getElementById('vehicleBody');
+  if (vehicleBody && data.vehicles && data.vehicles.length) {
+    vehicleBody.innerHTML = data.vehicles.map(v => `<tr>
+      <td>${v.registration || '—'}</td>
+      <td>${v.make_model || '—'}</td>
+      <td>${v.colour || '—'}</td>
+      <td>${v.owner || '—'}</td>
+      <td>${v.notes || '—'}</td>
+    </tr>`).join('');
+  }
+
+  // Key points
+  const kpl = document.getElementById('keyPointsList');
+  if (kpl && data.key_points && data.key_points.length) {
+    kpl.innerHTML = data.key_points.map(p => `<li>${p}</li>`).join('');
+  }
+
+  // Actions taken
+  const al = document.getElementById('actionsList');
+  if (al && data.actions_taken && data.actions_taken.length) {
+    al.innerHTML = data.actions_taken.map(a => `<li>${a}</li>`).join('');
+  }
+
+  // Report meta
+  const dur = data.audio_duration_s ? `${Math.round(data.audio_duration_s)}s` : '—';
+  document.getElementById('audioMeta').textContent = `Audio duration: ${dur}`;
+  document.getElementById('generatedAt').textContent =
+    `Generated: ${new Date().toLocaleString()}`;
+}
+
+// Expose globally for the main app to call
+window.fillReport = fillReport;
+</script>
+
+</body>
+</html>
