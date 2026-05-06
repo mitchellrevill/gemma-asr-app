@@ -120,7 +120,7 @@ class GemmaASR:
     #   1. Env var GEMMA_QUANTIZE=1 / =0   (runtime override, e.g. for demos)
     #   2. Class attribute GEMMA_QUANTIZE  (file-level default; True / False / None)
     #   3. Auto: quantize if VRAM < _LOW_VRAM_THRESHOLD_GB
-    GEMMA_QUANTIZE = 0
+    GEMMA_QUANTIZE = 1
     _LOW_VRAM_THRESHOLD_GB = 8
 
     def __init__(self, device: str = "cuda"):
@@ -166,25 +166,28 @@ class GemmaASR:
             model_kwargs["quantization_config"] = BitsAndBytesConfig(
                 load_in_4bit=True,
                 bnb_4bit_quant_type="nf4",
-                bnb_4bit_compute_dtype=torch.bfloat16,
+                bnb_4bit_compute_dtype=torch.float16,
                 bnb_4bit_use_double_quant=True,
                 llm_int8_skip_modules=[
-                    "audio_tower",
-                    "vision_tower",
-                    "embed_audio",
-                    "embed_vision",
+                    # transformers uses re.match (start-anchored) + endswith,
+                    # so the full dotted path is required: "model.audio_tower"
+                    # NOT just "audio_tower" which would only match a top-level module.
+                    "model.audio_tower",
+                    "model.vision_tower",
+                    "model.embed_audio",
+                    "model.embed_vision",
                     "lm_head",
                 ],
             )
-            # Keep skipped modules in bf16 (not the default fp32).
-            model_kwargs["dtype"] = torch.bfloat16
+            # Keep skipped modules in fp16 (not the default fp32).
+            model_kwargs["dtype"] = torch.float16
             logger.info(
                 f"Loading {MODEL_ID} on {device_map} with 4-bit NF4 quantization "
-                f"(low-VRAM mode, audio/vision towers kept in bf16) — "
+                f"(low-VRAM mode, audio/vision towers kept in fp16) — "
                 f"this may take several minutes on first run…"
             )
         else:
-            model_kwargs["dtype"] = torch.bfloat16 if use_cuda else torch.float32
+            model_kwargs["dtype"] = torch.float16 if use_cuda else torch.float32
             logger.info(
                 f"Loading {MODEL_ID} on {device_map} ({model_kwargs['dtype']}) — "
                 f"this may take several minutes on first run…"
