@@ -1,4 +1,4 @@
-# Police Situation Report
+# Gemma Demo Usecase
 
 A small local web app that takes an officer's verbal report  recorded in the
 browser or uploaded as a file  and turns it into a structured incident report
